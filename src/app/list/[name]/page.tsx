@@ -1,9 +1,9 @@
 // app/list/[name]/page.tsx
 import BuyLinks from './BuyLinks'
 
-// PageProps 타입 직접 정의
+// PageProps 타입 정의
 type PageProps = {
-  params: { name: string }
+  params: { name: string } // name이 항상 string임을 보장
   searchParams?: { [key: string]: string | string[] | undefined }
 }
 
@@ -31,6 +31,11 @@ async function getListData (name: string): Promise<ListData> {
 }
 
 export default async function ListPage ({ params }: PageProps) {
+  // params.name이 string임을 보장하지만, 안전을 위해 체크 추가
+  if (!params || !params.name) {
+    return <div className='page'>에러: 리스트 이름을 찾을 수 없어요!</div>
+  }
+
   try {
     const listData = await getListData(params.name)
 
