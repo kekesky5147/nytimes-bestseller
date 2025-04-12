@@ -30,6 +30,7 @@ async function getListData (name: string): Promise<ListData> {
   return json.results
 }
 
+// 명시적으로 PageProps 타입을 사용
 export default async function ListPage ({ params }: PageProps) {
   // params.name이 string임을 보장하지만, 안전을 위해 체크 추가
   if (!params || !params.name) {
@@ -37,8 +38,7 @@ export default async function ListPage ({ params }: PageProps) {
   }
 
   try {
-    // params.name을 명시적으로 string으로 단언
-    const listData = await getListData(params.name as string)
+    const listData = await getListData(params.name)
 
     return (
       <div className='page'>
