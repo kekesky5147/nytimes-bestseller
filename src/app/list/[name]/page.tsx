@@ -1,6 +1,11 @@
 // app/list/[name]/page.tsx
 import BuyLinks from './BuyLinks'
-import type { PageProps } from 'next' // PageProps 타입 가져오기
+
+// PageProps 타입 직접 정의
+type PageProps = {
+  params: { name: string }
+  searchParams?: { [key: string]: string | string[] | undefined }
+}
 
 type Book = {
   rank: number
