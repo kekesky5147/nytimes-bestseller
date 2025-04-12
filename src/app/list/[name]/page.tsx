@@ -37,7 +37,8 @@ export default async function ListPage ({ params }: PageProps) {
   }
 
   try {
-    const listData = await getListData(params.name)
+    // params.name을 명시적으로 string으로 단언
+    const listData = await getListData(params.name as string)
 
     return (
       <div className='page'>
