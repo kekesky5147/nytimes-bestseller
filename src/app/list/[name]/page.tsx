@@ -1,10 +1,13 @@
 // app/list/[name]/page.tsx
+'use client' // 클라이언트 컴포넌트로 선언
+
+import { use } from 'react'
 import BuyLinks from './BuyLinks'
 
 // PageProps 타입 정의
 type PageProps = {
-  params: { name: string } // name이 항상 string임을 보장
-  searchParams?: { [key: string]: string | string[] | undefined }
+  params: Promise<{ name: string }>
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 type Book = {
@@ -20,29 +23,30 @@ type ListData = {
   books: Book[]
 }
 
-// 데이터 페칭 함수 (서버 컴포넌트에서 직접 호출)
-function fetchListData (name: string): Promise<ListData> {
-  return fetch(`https://books-api.nomadcoders.workers.dev/list?name=${name}`, {
-    cache: 'no-store'
-  })
-    .then(response => {
-      if (!response.ok) throw new Error(`데이터를 가져오지 못했어요: ${name}`)
-      return response.json()
-    })
-    .then(json => json.results)
+// 데이터 페칭 함수
+async function fetchListData (name: string): Promise<ListData> {
+  const response = await fetch(
+    `https://books-api.nomadcoders.workers.dev/list?name=${name}`,
+    { cache: 'no-store' }
+  )
+  if (!response.ok) throw new Error(`데이터를 가져오지 못했어요: ${name}`)
+  const json = await response.json()
+  return json.results
 }
 
-// ListPage는 async 없이 서버 컴포넌트로 동작
 export default function ListPage ({ params }: PageProps) {
-  // params.name이 string임을 보장하지만, 안전을 위해 체크 추가
-  if (!params || !params.name) {
+  // use 훅으로 params 풀기
+  const resolvedParams = use(params)
+
+  // resolvedParams.name이 string임을 보장
+  if (!resolvedParams || !resolvedParams.name) {
     return <div className='page'>에러: 리스트 이름을 찾을 수 없어요!</div>
   }
 
-  // 서버 컴포넌트에서 직접 데이터 페칭
-  const listData = fetchListData(params.name)
+  // 클라이언트에서 데이터 페칭
+  const listDataPromise = fetchListData(resolvedParams.name)
+  const listData = use(listDataPromise)
 
-  // Next.js 서버 컴포넌트는 Promise를 자동으로 처리
   return (
     <div className='page'>
       <h1 className='title'>{listData.list_name}</h1>
