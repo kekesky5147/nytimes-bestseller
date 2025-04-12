@@ -20,7 +20,8 @@ type ListData = {
   books: Book[]
 }
 
-async function getListData (name: string): Promise<ListData> {
+// 데이터 페칭 함수 (비동기 처리 분리)
+async function fetchListData (name: string): Promise<ListData> {
   const response = await fetch(
     `https://books-api.nomadcoders.workers.dev/list?name=${name}`,
     { cache: 'no-store' }
@@ -30,47 +31,52 @@ async function getListData (name: string): Promise<ListData> {
   return json.results
 }
 
-// 명시적으로 PageProps 타입을 사용
-export default async function ListPage ({ params }: PageProps) {
+// ListPage에서 async 제거
+export default function ListPage ({ params }: PageProps) {
   // params.name이 string임을 보장하지만, 안전을 위해 체크 추가
   if (!params || !params.name) {
     return <div className='page'>에러: 리스트 이름을 찾을 수 없어요!</div>
   }
 
-  try {
-    const listData = await getListData(params.name)
+  // 서버에서 데이터 페칭
+  const listDataPromise = fetchListData(params.name)
 
-    return (
-      <div className='page'>
-        <h1 className='title'>{listData.list_name}</h1>
-        <div className='list-container'>
-          {listData.books.map(book => (
-            <div key={book.rank} className='book-item'>
-              <img
-                src={book.book_image}
-                alt={book.title}
-                className='book-image'
-              />
-              <div className='book-info'>
-                <h3>{book.title}</h3>
-                <p>
-                  Author: <br />
-                  {book.author}
-                </p>
-                <BuyLinks
-                  amazonUrl={book.amazon_product_url}
-                  title={book.title}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+  // 데이터를 바로 사용하기 위해 Promise를 처리 (Server Component에서는 가능)
+  let listData: ListData
+  try {
+    listData = await listDataPromise
   } catch (error: unknown) {
     if (error instanceof Error) {
       return <div className='page'>에러: {error.message}</div>
     }
     return <div className='page'>알 수 없는 에러가 발생했어요!</div>
   }
+
+  return (
+    <div className='page'>
+      <h1 className='title'>{listData.list_name}</h1>
+      <div className='list-container'>
+        {listData.books.map(book => (
+          <div key={book.rank} className='book-item'>
+            <img
+              src={book.book_image}
+              alt={book.title}
+              className='book-image'
+            />
+            <div className='book-info'>
+              <h3>{book.title}</h3>
+              <p>
+                Author: <br />
+                {book.author}
+              </p>
+              <BuyLinks
+                amazonUrl={book.amazon_product_url}
+                title={book.title}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
