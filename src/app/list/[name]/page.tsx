@@ -1,5 +1,7 @@
 // app/list/[name]/page.tsx
 import BuyLinks from './BuyLinks'
+import type { PageProps } from 'next' // PageProps 타입 가져오기
+
 type Book = {
   rank: number
   title: string
@@ -23,11 +25,7 @@ async function getListData (name: string): Promise<ListData> {
   return json.results
 }
 
-export default async function ListPage ({
-  params
-}: {
-  params: { name: string }
-}) {
+export default async function ListPage ({ params }: PageProps) {
   try {
     const listData = await getListData(params.name)
 
