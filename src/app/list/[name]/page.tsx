@@ -20,38 +20,29 @@ type ListData = {
   books: Book[]
 }
 
-// 데이터 페칭 함수 (비동기 처리 분리)
-async function fetchListData (name: string): Promise<ListData> {
-  const response = await fetch(
-    `https://books-api.nomadcoders.workers.dev/list?name=${name}`,
-    { cache: 'no-store' }
-  )
-  if (!response.ok) throw new Error(`데이터를 가져오지 못했어요: ${name}`)
-  const json = await response.json()
-  return json.results
+// 데이터 페칭 함수 (서버 컴포넌트에서 직접 호출)
+function fetchListData (name: string): Promise<ListData> {
+  return fetch(`https://books-api.nomadcoders.workers.dev/list?name=${name}`, {
+    cache: 'no-store'
+  })
+    .then(response => {
+      if (!response.ok) throw new Error(`데이터를 가져오지 못했어요: ${name}`)
+      return response.json()
+    })
+    .then(json => json.results)
 }
 
-// ListPage에서 async 제거
+// ListPage는 async 없이 서버 컴포넌트로 동작
 export default function ListPage ({ params }: PageProps) {
   // params.name이 string임을 보장하지만, 안전을 위해 체크 추가
   if (!params || !params.name) {
     return <div className='page'>에러: 리스트 이름을 찾을 수 없어요!</div>
   }
 
-  // 서버에서 데이터 페칭
-  const listDataPromise = fetchListData(params.name)
+  // 서버 컴포넌트에서 직접 데이터 페칭
+  const listData = fetchListData(params.name)
 
-  // 데이터를 바로 사용하기 위해 Promise를 처리 (Server Component에서는 가능)
-  let listData: ListData
-  try {
-    listData = await listDataPromise
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      return <div className='page'>에러: {error.message}</div>
-    }
-    return <div className='page'>알 수 없는 에러가 발생했어요!</div>
-  }
-
+  // Next.js 서버 컴포넌트는 Promise를 자동으로 처리
   return (
     <div className='page'>
       <h1 className='title'>{listData.list_name}</h1>
